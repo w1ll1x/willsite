@@ -286,6 +286,20 @@ img {
 	object-fit: cover;
 }
 
+.gallery-stack {
+	display: flex;
+	flex-direction: column;
+	gap: var(--gap);
+	margin: var(--gap) 0;
+}
+
+.gallery-stack img,
+.gallery-stack video {
+	display: block;
+	width: 100%;
+	height: auto;
+}
+
 .gallery-columnized {
 	columns: 4;
 	column-gap: var(--gap);

@@ -27,7 +27,9 @@ document.addEventListener('DOMContentLoaded', function () {
 	// EN/DE language toggle. Each translatable element carries a .i18n
 	// class and a data-de attribute; its original (English) markup is
 	// captured into data-en the first time it's swapped.
-	var LANG_KEY = 'site-lang';
+	// The key changed from 'site-lang' so auto-detected values that the old
+	// code saved don't stick; only an explicit toggle click is remembered.
+	var LANG_KEY = 'site-lang-choice';
 
 	function applyLang(lang) {
 		document.querySelectorAll('.i18n').forEach(function (el) {
@@ -40,23 +42,29 @@ document.addEventListener('DOMContentLoaded', function () {
 		document.querySelectorAll('.lang-btn').forEach(function (btn) {
 			btn.classList.toggle('active', btn.getAttribute('data-lang') === lang);
 		});
-		try { localStorage.setItem(LANG_KEY, lang); } catch (e) {}
 	}
 
+	// English unless the visitor picked German, their primary browser
+	// language is German, or their clock is set to Germany's time zone.
 	function detectLang() {
 		var saved = null;
 		try { saved = localStorage.getItem(LANG_KEY); } catch (e) {}
-		if (saved) return saved;
-		var browserLangs = navigator.languages || [navigator.language || ''];
-		var isGerman = browserLangs.some(function (l) { return /^de\b/i.test(l); });
-		return isGerman ? 'de' : 'en';
+		if (saved === 'en' || saved === 'de') return saved;
+		var primary = (navigator.languages && navigator.languages[0]) || navigator.language || '';
+		if (/^de\b/i.test(primary)) return 'de';
+		var tz = '';
+		try { tz = Intl.DateTimeFormat().resolvedOptions().timeZone || ''; } catch (e) {}
+		if (tz === 'Europe/Berlin' || tz === 'Europe/Busingen') return 'de';
+		return 'en';
 	}
 
 	applyLang(detectLang());
 
 	document.querySelectorAll('.lang-btn').forEach(function (btn) {
 		btn.addEventListener('click', function () {
-			applyLang(btn.getAttribute('data-lang'));
+			var lang = btn.getAttribute('data-lang');
+			applyLang(lang);
+			try { localStorage.setItem(LANG_KEY, lang); } catch (e) {}
 		});
 	});
 
